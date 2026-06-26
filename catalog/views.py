@@ -1,9 +1,13 @@
 from django.shortcuts import render
 
+from catalog.models import Contact, Product
+
 
 def home(request):
     """Отображает главную страницу каталога."""
-    return render(request, 'catalog/home.html')
+    latest_products = Product.objects.order_by("-created_at")[:5]
+    print(latest_products)
+    return render(request, "catalog/home.html", {"latest_products": latest_products})
 
 
 def contacts(request):
@@ -22,5 +26,8 @@ def contacts(request):
 
         success_message = 'Сообщение успешно отправлено!'
 
-    context = {'success_message': success_message}
-    return render(request, 'catalog/contacts.html', context)
+    context = {
+        "success_message": success_message,
+        "contacts": Contact.objects.all(),
+    }
+    return render(request, "catalog/contacts.html", context)
