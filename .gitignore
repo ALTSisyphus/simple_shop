@@ -16,9 +16,11 @@ __pycache__/
 *.sqlite
 *.sqlite3
 db.sqlite3
+media/
 
 # Environment variables
 .env
 
 # OS
 .DS_Store
+poetry.toml
