@@ -11,12 +11,6 @@ Skystore — учебный проект интернет-магазина на 
 
 Страницы сверстаны на HTML с использованием Bootstrap.
 
-## Технологии
-
-- Python
-- Django
-- Bootstrap
-
 ## Структура проекта
 
 ```text
@@ -26,7 +20,12 @@ simple_shop/
 │   │   └── catalog/
 │   │       ├── home.html
 │   │       └── contacts.html
+│   ├── fixtures/
+│   ├── management/
+│   ├── migrations/
+│   ├── admin.py
 │   ├── apps.py
+│   ├── models.py
 │   ├── urls.py
 │   └── views.py
 ├── config/
@@ -35,6 +34,7 @@ simple_shop/
 │   ├── asgi.py
 │   └── wsgi.py
 ├── manage.py
+├── screenshots/
 ├── requirements.txt
 ├── .gitignore
 └── README.md
