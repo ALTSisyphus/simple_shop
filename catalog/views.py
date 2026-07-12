@@ -4,13 +4,13 @@ from catalog.models import Contact, Product
 
 
 def home(request):
-    """Отображает главную страницу каталога."""
-    latest_products = Product.objects.order_by("-created_at")[:5]
+    """Отображает главную страницу со списком товаров."""
+    products = Product.objects.all()
 
     return render(
         request,
         "catalog/home.html",
-        {"latest_products": latest_products},
+        {"products": products},
     )
 
 

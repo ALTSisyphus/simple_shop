@@ -1,19 +1,78 @@
 {% extends "catalog/base.html" %}
+{% load static %}
 
 {% block title %}
-    Главная — Skystore
+    Каталог товаров — Skystore
 {% endblock %}
 
 {% block content %}
 <section class="container py-5">
-    <div class="text-center">
+    <div class="text-center mb-5">
         <h1 class="display-5 fw-bold">
-            Добро пожаловать в Skystore
+            Каталог товаров
         </h1>
 
         <p class="lead text-muted mb-0">
-            Здесь вы найдёте товары для своих проектов.
+            Готовые цифровые решения для ваших проектов.
         </p>
+    </div>
+
+    <div class="row g-4">
+        {% for product in products %}
+            <div class="col-12 col-md-6 col-lg-4">
+                <article class="card product-card h-100 shadow-sm">
+                    {% if product.image %}
+                        <img
+                            class="card-img-top product-card__image"
+                            src="{{ product.image.url }}"
+                            alt="{{ product.name }}"
+                        >
+                    {% else %}
+                        <img
+                            class="card-img-top product-card__image"
+                            src="{% static 'catalog/images/no-image.svg' %}"
+                            alt="Изображение отсутствует"
+                        >
+                    {% endif %}
+
+                    <div class="card-body d-flex flex-column">
+                        <h2 class="h5 card-title">
+                            {{ product.name }}
+                        </h2>
+
+                        <p class="card-text text-muted flex-grow-1">
+                            {% if product.description %}
+                                {{ product.description|truncatechars:100 }}
+                            {% else %}
+                                Описание отсутствует.
+                            {% endif %}
+                        </p>
+
+                        <div class="d-flex justify-content-between align-items-center gap-3">
+                            <span class="fw-bold">
+                                {{ product.price }} руб.
+                            </span>
+
+                            <a
+                                class="btn btn-outline-primary"
+                                href="{% url 'catalog:product_detail' product.pk %}"
+                            >
+                                Подробнее
+                            </a>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        {% empty %}
+            <div class="col-12">
+                <div
+                    class="alert alert-info text-center"
+                    role="alert"
+                >
+                    Товаров пока нет.
+                </div>
+            </div>
+        {% endfor %}
     </div>
 </section>
 {% endblock %}
