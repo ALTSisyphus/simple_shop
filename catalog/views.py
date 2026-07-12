@@ -1,3 +1,4 @@
+from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect, render
 
 from catalog.forms import ProductForm
@@ -5,13 +6,21 @@ from catalog.models import Category, Contact, Product
 
 
 def home(request):
-    """Отображает главную страницу со списком товаров."""
+    """Отображает главную страницу с постраничным списком товаров."""
     products = Product.objects.all()
+
+    paginator = Paginator(products, 6)
+    page_obj = paginator.get_page(request.GET.get("page"))
+
+    context = {
+        "products": page_obj,
+        "page_obj": page_obj,
+    }
 
     return render(
         request,
         "catalog/home.html",
-        {"products": products},
+        context,
     )
 
 
