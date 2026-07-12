@@ -1,6 +1,7 @@
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, redirect, render
 
-from catalog.models import Contact, Product
+from catalog.forms import ProductForm
+from catalog.models import Category, Contact, Product
 
 
 def home(request):
@@ -22,6 +23,40 @@ def product_detail(request, pk):
         request,
         "catalog/product_detail.html",
         {"product": product},
+    )
+
+
+def product_create(request):
+    """Создаёт новый товар через форму."""
+    if request.method == "POST":
+        form = ProductForm(
+            request.POST,
+            request.FILES,
+        )
+
+        if form.is_valid():
+            product = form.save(commit=False)
+
+            category, _ = Category.objects.get_or_create(
+                name="Без категории",
+                defaults={
+                    "description": (
+                        "Товары, добавленные через форму."
+                    ),
+                },
+            )
+
+            product.category = category
+            product.save()
+
+            return redirect("catalog:home")
+    else:
+        form = ProductForm()
+
+    return render(
+        request,
+        "catalog/product_form.html",
+        {"form": form},
     )
 
 
