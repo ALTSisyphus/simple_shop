@@ -6,21 +6,36 @@
 venv/
 env/
 .venv/
+.venv*/
 
 # Python
 __pycache__/
 *.py[cod]
 *$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
 
 # Django / databases
 *.sqlite
 *.sqlite3
 db.sqlite3
 media/
+staticfiles/
 
 # Environment variables
 .env
+.env.*
+!.env.example
+
+# Logs
+*.log
 
 # OS
 .DS_Store
+Thumbs.db
+
+# Poetry local settings
 poetry.toml
