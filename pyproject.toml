@@ -3,7 +3,7 @@ name = "simple-shop"
 version = "0.1.0"
 description = ""
 authors = [
-    {name = "ALT Sisyphus",email = "altsisyphus@gmail.com"}
+    {name = "ALT Sisyphus", email = "altsisyphus@gmail.com"}
 ]
 readme = "README.md"
 requires-python = ">=3.14"
@@ -15,6 +15,8 @@ dependencies = [
     "ipython (>=9.14.1,<10.0.0)"
 ]
 
+[tool.poetry]
+package-mode = false
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
