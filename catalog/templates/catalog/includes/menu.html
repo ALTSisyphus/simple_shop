@@ -1,0 +1,44 @@
+<nav
+    class="navbar navbar-expand-md p-0"
+    aria-label="Главное меню"
+>
+    <a
+        class="navbar-brand fw-bold"
+        href="{% url 'catalog:home' %}"
+    >
+        Skystore
+    </a>
+
+    <button
+        class="navbar-toggler"
+        type="button"
+        data-bs-toggle="collapse"
+        data-bs-target="#mainMenu"
+        aria-controls="mainMenu"
+        aria-expanded="false"
+        aria-label="Открыть меню"
+    >
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div
+        class="collapse navbar-collapse"
+        id="mainMenu"
+    >
+        <div class="navbar-nav ms-auto gap-md-2 mt-3 mt-md-0">
+            <a
+                class="nav-link"
+                href="{% url 'catalog:home' %}"
+            >
+                Главная
+            </a>
+
+            <a
+                class="nav-link"
+                href="{% url 'catalog:contacts' %}"
+            >
+                Контакты
+            </a>
+        </div>
+    </div>
+</nav>
