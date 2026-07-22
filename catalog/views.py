@@ -1,79 +1,69 @@
-from django.core.paginator import Paginator
-from django.shortcuts import get_object_or_404, redirect, render
+from django.shortcuts import render
+from django.urls import reverse_lazy
+from django.views import View
+from django.views.generic import CreateView, DetailView, ListView
 
 from catalog.forms import ProductForm
 from catalog.models import Category, Contact, Product
 
 
-def home(request):
+class ProductListView(ListView):
     """Отображает главную страницу с постраничным списком товаров."""
-    products = Product.objects.all()
 
-    paginator = Paginator(products, 6)
-    page_obj = paginator.get_page(request.GET.get("page"))
-
-    context = {
-        "products": page_obj,
-        "page_obj": page_obj,
-    }
-
-    return render(
-        request,
-        "catalog/home.html",
-        context,
-    )
+    model = Product
+    template_name = "catalog/home.html"
+    context_object_name = "products"
+    paginate_by = 6
 
 
-def product_detail(request, pk):
+class ProductDetailView(DetailView):
     """Отображает подробную информацию о выбранном товаре."""
-    product = get_object_or_404(Product, pk=pk)
 
-    return render(
-        request,
-        "catalog/product_detail.html",
-        {"product": product},
-    )
+    model = Product
+    template_name = "catalog/product_detail.html"
+    context_object_name = "product"
 
 
-def product_create(request):
+class ProductCreateView(CreateView):
     """Создаёт новый товар через форму."""
-    if request.method == "POST":
-        form = ProductForm(
-            request.POST,
-            request.FILES,
+
+    model = Product
+    form_class = ProductForm
+    template_name = "catalog/product_form.html"
+    success_url = reverse_lazy("catalog:home")
+
+    def form_valid(self, form):
+        """Назначает новому товару категорию по умолчанию."""
+        category, _ = Category.objects.get_or_create(
+            name="Без категории",
+            defaults={
+                "description": "Товары, добавленные через форму.",
+            },
         )
 
-        if form.is_valid():
-            product = form.save(commit=False)
+        form.instance.category = category
 
-            category, _ = Category.objects.get_or_create(
-                name="Без категории",
-                defaults={
-                    "description": (
-                        "Товары, добавленные через форму."
-                    ),
-                },
-            )
-
-            product.category = category
-            product.save()
-
-            return redirect("catalog:home")
-    else:
-        form = ProductForm()
-
-    return render(
-        request,
-        "catalog/product_form.html",
-        {"form": form},
-    )
+        return super().form_valid(form)
 
 
-def contacts(request):
+class ContactsView(View):
     """Отображает контакты и обрабатывает форму обратной связи."""
-    success_message = None
 
-    if request.method == "POST":
+    template_name = "catalog/contacts.html"
+
+    def get(self, request):
+        """Отображает страницу контактов."""
+        return render(
+            request,
+            self.template_name,
+            {
+                "success_message": None,
+                "contacts": Contact.objects.all(),
+            },
+        )
+
+    def post(self, request):
+        """Обрабатывает отправленную форму обратной связи."""
         name = request.POST.get("name")
         phone = request.POST.get("phone")
         message = request.POST.get("message")
@@ -83,15 +73,11 @@ def contacts(request):
         print(f"Телефон: {phone}")
         print(f"Сообщение: {message}")
 
-        success_message = "Сообщение успешно отправлено!"
-
-    context = {
-        "success_message": success_message,
-        "contacts": Contact.objects.all(),
-    }
-
-    return render(
-        request,
-        "catalog/contacts.html",
-        context,
-    )
+        return render(
+            request,
+            self.template_name,
+            {
+                "success_message": "Сообщение успешно отправлено!",
+                "contacts": Contact.objects.all(),
+            },
+        )

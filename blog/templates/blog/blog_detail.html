@@ -1,0 +1,90 @@
+{% extends "catalog/base.html" %}
+{% load static %}
+
+{% block title %}
+    {{ blog.title }} — Skystore
+{% endblock %}
+
+{% block content %}
+<section class="container py-5">
+    <article class="card shadow-sm overflow-hidden">
+        {% if blog.preview %}
+            <img
+                class="w-100"
+                src="{{ blog.preview.url }}"
+                alt="{{ blog.title }}"
+                style="max-height: 520px; object-fit: cover;"
+            >
+        {% else %}
+            <img
+                class="w-100"
+                src="{% static 'catalog/images/no-image.svg' %}"
+                alt="Превью отсутствует"
+                style="max-height: 420px; object-fit: contain;"
+            >
+        {% endif %}
+
+        <div class="card-body p-4 p-lg-5">
+            <div
+                class="d-flex flex-column flex-md-row justify-content-between gap-3 mb-4"
+            >
+                <div>
+                    <h1 class="display-6 fw-bold mb-3">
+                        {{ blog.title }}
+                    </h1>
+
+                    <p class="text-muted mb-0">
+                        Создано:
+                        {{ blog.created_at|date:"d.m.Y H:i" }}
+                    </p>
+                </div>
+
+                <div class="text-md-end">
+                    <p class="mb-2">
+                        {% if blog.is_published %}
+                            <span class="badge text-bg-success">
+                                Опубликовано
+                            </span>
+                        {% else %}
+                            <span class="badge text-bg-secondary">
+                                Не опубликовано
+                            </span>
+                        {% endif %}
+                    </p>
+
+                    <p class="text-muted mb-0">
+                        Просмотры: {{ blog.views_count }}
+                    </p>
+                </div>
+            </div>
+
+            <div class="mb-5">
+                {{ blog.content|linebreaks }}
+            </div>
+
+            <div class="d-flex flex-wrap gap-2">
+                <a
+                    class="btn btn-primary"
+                    href="{% url 'blog:blog_update' blog.pk %}"
+                >
+                    Редактировать
+                </a>
+
+                <a
+                    class="btn btn-outline-danger"
+                    href="{% url 'blog:blog_delete' blog.pk %}"
+                >
+                    Удалить
+                </a>
+
+                <a
+                    class="btn btn-outline-secondary"
+                    href="{% url 'blog:blog_list' %}"
+                >
+                    Назад к списку
+                </a>
+            </div>
+        </div>
+    </article>
+</section>
+{% endblock %}
