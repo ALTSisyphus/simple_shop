@@ -60,7 +60,13 @@ class BlogUpdateView(UpdateView):
     model = Blog
     form_class = BlogForm
     template_name = "blog/blog_form.html"
-    success_url = "/blogs/{id}/"
+
+    def get_success_url(self):
+        """Перенаправляет на отредактированную блоговую запись."""
+        return reverse_lazy(
+            "blog:blog_detail",
+            kwargs={"pk": self.object.pk},
+        )
 
 
 class BlogDeleteView(DeleteView):
