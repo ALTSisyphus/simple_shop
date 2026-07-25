@@ -1,0 +1,75 @@
+{% extends "catalog/base.html" %}
+{% load static %}
+
+{% block title %}
+    {{ product.name }} — Skystore
+{% endblock %}
+
+{% block content %}
+<section class="container py-5">
+    <div class="card shadow-sm overflow-hidden">
+        <div class="row g-0">
+            <div class="col-lg-6 bg-white">
+                {% if product.image %}
+                    <img
+                        class="product-detail__image"
+                        src="{{ product.image.url }}"
+                        alt="{{ product.name }}"
+                    >
+                {% else %}
+                    <img
+                        class="product-detail__image"
+                        src="{% static 'catalog/images/no-image.svg' %}"
+                        alt="Изображение отсутствует"
+                    >
+                {% endif %}
+            </div>
+
+            <div class="col-lg-6">
+                <div
+                    class="card-body p-4 p-lg-5 h-100 d-flex flex-column"
+                >
+                    <h1 class="display-6 fw-bold mb-4">
+                        {{ product.name }}
+                    </h1>
+
+                    <div class="text-muted product-description flex-grow-1">
+                        {% if product.description %}
+                            {{ product.description|linebreaks }}
+                        {% else %}
+                            <p>Описание отсутствует.</p>
+                        {% endif %}
+                    </div>
+
+                    <p class="fs-3 fw-bold mt-4 mb-4">
+                        {{ product.price }} руб.
+                    </p>
+
+                    <div class="d-flex flex-wrap gap-2">
+                        <a
+                            class="btn btn-primary"
+                            href="{% url 'catalog:product_update' product.pk %}"
+                        >
+                            Редактировать
+                        </a>
+
+                        <a
+                            class="btn btn-outline-danger"
+                            href="{% url 'catalog:product_delete' product.pk %}"
+                        >
+                            Удалить
+                        </a>
+
+                        <a
+                            class="btn btn-outline-secondary"
+                            href="{% url 'catalog:home' %}"
+                        >
+                            Назад на главную
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
