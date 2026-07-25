@@ -1,7 +1,13 @@
 from django.shortcuts import render
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 from django.views import View
-from django.views.generic import CreateView, DetailView, ListView
+from django.views.generic import (
+    CreateView,
+    DeleteView,
+    DetailView,
+    ListView,
+    UpdateView,
+)
 
 from catalog.forms import ProductForm
 from catalog.models import Category, Contact, Product
@@ -30,7 +36,6 @@ class ProductCreateView(CreateView):
     model = Product
     form_class = ProductForm
     template_name = "catalog/product_form.html"
-    success_url = reverse_lazy("catalog:home")
 
     def form_valid(self, form):
         """Назначает новому товару категорию по умолчанию."""
@@ -40,10 +45,38 @@ class ProductCreateView(CreateView):
                 "description": "Товары, добавленные через форму.",
             },
         )
-
         form.instance.category = category
-
         return super().form_valid(form)
+
+    def get_success_url(self):
+        """Перенаправляет на страницу созданного товара."""
+        return reverse(
+            "catalog:product_detail",
+            kwargs={"pk": self.object.pk},
+        )
+
+
+class ProductUpdateView(UpdateView):
+    """Редактирует существующий товар."""
+
+    model = Product
+    form_class = ProductForm
+    template_name = "catalog/product_form.html"
+
+    def get_success_url(self):
+        """Перенаправляет на страницу изменённого товара."""
+        return reverse(
+            "catalog:product_detail",
+            kwargs={"pk": self.object.pk},
+        )
+
+
+class ProductDeleteView(DeleteView):
+    """Удаляет товар после подтверждения."""
+
+    model = Product
+    template_name = "catalog/product_confirm_delete.html"
+    success_url = reverse_lazy("catalog:home")
 
 
 class ContactsView(View):
