@@ -29,6 +29,16 @@
     </div>
 </header>
 
+{% if messages %}
+    <div class="container pt-3">
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags|default:'info' }} mb-2" role="alert">
+                {{ message }}
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+
 <main class="flex-grow-1">
     {% block content %}
     {% endblock %}
