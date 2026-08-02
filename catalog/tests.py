@@ -2,6 +2,7 @@ import io
 import shutil
 import tempfile
 
+from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.urls import reverse
@@ -71,6 +72,11 @@ class CatalogTestCase(TestCase):
             category=self.category,
             price="100.00",
         )
+        self.user = get_user_model().objects.create_user(
+            email="catalog-tests@example.com",
+            password="StrongPass123!",
+        )
+        self.client.force_login(self.user)
 
     @staticmethod
     def valid_form_data(**overrides):
