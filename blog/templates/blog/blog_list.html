@@ -20,12 +20,14 @@
             </p>
         </div>
 
-        <a
-            class="btn btn-primary"
-            href="{% url 'blog:blog_create' %}"
-        >
-            Создать статью
-        </a>
+        {% if perms.blog.add_blog %}
+            <a
+                class="btn btn-primary"
+                href="{% url 'blog:blog_create' %}"
+            >
+                Создать статью
+            </a>
+        {% endif %}
     </div>
 
     <div class="row g-4">
@@ -84,12 +86,14 @@
                 >
                     Опубликованных статей пока нет.
 
-                    <a
-                        class="alert-link"
-                        href="{% url 'blog:blog_create' %}"
-                    >
-                        Создайте первую статью
-                    </a>.
+                    {% if perms.blog.add_blog %}
+                        <a
+                            class="alert-link"
+                            href="{% url 'blog:blog_create' %}"
+                        >
+                            Создайте первую статью
+                        </a>.
+                    {% endif %}
                 </div>
             </div>
         {% endfor %}
