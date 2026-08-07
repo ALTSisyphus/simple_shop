@@ -1,3 +1,7 @@
+from django.contrib.auth.mixins import (
+    LoginRequiredMixin,
+    PermissionRequiredMixin,
+)
 from django.urls import reverse_lazy
 from django.views.generic import (
     CreateView,
@@ -39,12 +43,13 @@ class BlogDetailView(DetailView):
         return blog
 
 
-class BlogCreateView(CreateView):
-    """Создаёт новую блоговую запись."""
+class BlogCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
+    """Создаёт запись пользователем с правом управления блогом."""
 
     model = Blog
     form_class = BlogForm
     template_name = "blog/blog_form.html"
+    permission_required = "blog.add_blog"
 
     def get_success_url(self):
         """Перенаправляет на созданную блоговую запись."""
@@ -54,12 +59,13 @@ class BlogCreateView(CreateView):
         )
 
 
-class BlogUpdateView(UpdateView):
-    """Редактирует существующую блоговую запись."""
+class BlogUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
+    """Редактирует запись пользователем с правом изменения блога."""
 
     model = Blog
     form_class = BlogForm
     template_name = "blog/blog_form.html"
+    permission_required = "blog.change_blog"
 
     def get_success_url(self):
         """Перенаправляет на отредактированную блоговую запись."""
@@ -69,9 +75,10 @@ class BlogUpdateView(UpdateView):
         )
 
 
-class BlogDeleteView(DeleteView):
-    """Удаляет блоговую запись."""
+class BlogDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
+    """Удаляет запись пользователем с правом удаления блога."""
 
     model = Blog
     template_name = "blog/blog_confirm_delete.html"
     success_url = reverse_lazy("blog:blog_list")
+    permission_required = "blog.delete_blog"
