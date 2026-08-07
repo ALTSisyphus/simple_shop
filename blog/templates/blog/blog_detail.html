@@ -63,19 +63,23 @@
             </div>
 
             <div class="d-flex flex-wrap gap-2">
-                <a
-                    class="btn btn-primary"
-                    href="{% url 'blog:blog_update' blog.pk %}"
-                >
-                    Редактировать
-                </a>
+                {% if perms.blog.change_blog %}
+                    <a
+                        class="btn btn-primary"
+                        href="{% url 'blog:blog_update' blog.pk %}"
+                    >
+                        Редактировать
+                    </a>
+                {% endif %}
 
-                <a
-                    class="btn btn-outline-danger"
-                    href="{% url 'blog:blog_delete' blog.pk %}"
-                >
-                    Удалить
-                </a>
+                {% if perms.blog.delete_blog %}
+                    <a
+                        class="btn btn-outline-danger"
+                        href="{% url 'blog:blog_delete' blog.pk %}"
+                    >
+                        Удалить
+                    </a>
+                {% endif %}
 
                 <a
                     class="btn btn-outline-secondary"
