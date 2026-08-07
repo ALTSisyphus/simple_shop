@@ -29,9 +29,27 @@
                 <div
                     class="card-body p-4 p-lg-5 h-100 d-flex flex-column"
                 >
-                    <h1 class="display-6 fw-bold mb-4">
-                        {{ product.name }}
-                    </h1>
+                    <div class="d-flex flex-wrap justify-content-between gap-2 mb-3">
+                        <h1 class="display-6 fw-bold mb-0">
+                            {{ product.name }}
+                        </h1>
+
+                        {% if product.is_published %}
+                            <span class="badge text-bg-success align-self-start">
+                                Опубликован
+                            </span>
+                        {% else %}
+                            <span class="badge text-bg-secondary align-self-start">
+                                Не опубликован
+                            </span>
+                        {% endif %}
+                    </div>
+
+                    {% if product.owner %}
+                        <p class="small text-muted mb-4">
+                            Владелец: {{ product.owner.email }}
+                        </p>
+                    {% endif %}
 
                     <div class="text-muted product-description flex-grow-1">
                         {% if product.description %}
@@ -46,19 +64,38 @@
                     </p>
 
                     <div class="d-flex flex-wrap gap-2">
-                        <a
-                            class="btn btn-primary"
-                            href="{% url 'catalog:product_update' product.pk %}"
-                        >
-                            Редактировать
-                        </a>
+                        {% if user == product.owner or perms.catalog.change_product %}
+                            <a
+                                class="btn btn-primary"
+                                href="{% url 'catalog:product_update' product.pk %}"
+                            >
+                                Редактировать
+                            </a>
+                        {% endif %}
 
-                        <a
-                            class="btn btn-outline-danger"
-                            href="{% url 'catalog:product_delete' product.pk %}"
-                        >
-                            Удалить
-                        </a>
+                        {% if user == product.owner or perms.catalog.delete_product %}
+                            <a
+                                class="btn btn-outline-danger"
+                                href="{% url 'catalog:product_delete' product.pk %}"
+                            >
+                                Удалить
+                            </a>
+                        {% endif %}
+
+                        {% if product.is_published and perms.catalog.can_unpublish_product %}
+                            <form
+                                method="post"
+                                action="{% url 'catalog:product_unpublish' product.pk %}"
+                            >
+                                {% csrf_token %}
+                                <button
+                                    class="btn btn-outline-warning"
+                                    type="submit"
+                                >
+                                    Снять с публикации
+                                </button>
+                            </form>
+                        {% endif %}
 
                         <a
                             class="btn btn-outline-secondary"
