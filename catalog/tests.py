@@ -3,7 +3,9 @@ import shutil
 import tempfile
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group, Permission
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core.management import call_command
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from PIL import Image
@@ -62,6 +64,10 @@ class CatalogTestCase(TestCase):
         super().tearDownClass()
 
     def setUp(self):
+        self.user = get_user_model().objects.create_user(
+            email="catalog-tests@example.com",
+            password="StrongPass123!",
+        )
         self.category = Category.objects.create(
             name="Тестовая категория",
             description="Категория для автоматических тестов.",
@@ -71,10 +77,7 @@ class CatalogTestCase(TestCase):
             description="Подробное описание тестового товара.",
             category=self.category,
             price="100.00",
-        )
-        self.user = get_user_model().objects.create_user(
-            email="catalog-tests@example.com",
-            password="StrongPass123!",
+            owner=self.user,
         )
         self.client.force_login(self.user)
 
@@ -175,6 +178,8 @@ class CatalogViewsTests(CatalogTestCase):
             ),
         )
         self.assertEqual(product.category.name, "Без категории")
+        self.assertEqual(product.owner, self.user)
+        self.assertFalse(product.is_published)
         self.assertTrue(product.image.name.startswith("products/"))
 
     def test_product_is_updated_and_category_is_preserved(self):
@@ -235,6 +240,157 @@ class CatalogViewsTests(CatalogTestCase):
         self.assertRedirects(response, reverse("catalog:home"))
         self.assertFalse(
             Product.objects.filter(pk=self.product.pk).exists()
+        )
+
+
+class ProductPermissionsTests(CatalogTestCase):
+    """Тесты владельца, модераторских прав и снятия с публикации."""
+
+    def setUp(self):
+        super().setUp()
+        self.other_user = get_user_model().objects.create_user(
+            email="other-user@example.com",
+            password="StrongPass123!",
+        )
+        self.moderator = get_user_model().objects.create_user(
+            email="moderator@example.com",
+            password="StrongPass123!",
+        )
+        permissions = Permission.objects.filter(
+            content_type__app_label="catalog",
+            codename__in=(
+                "can_unpublish_product",
+                "change_product",
+                "delete_product",
+            ),
+        )
+        self.moderator.user_permissions.set(permissions)
+
+    def test_non_owner_cannot_open_update_or_delete(self):
+        self.client.force_login(self.other_user)
+
+        for route_name in (
+            "catalog:product_update",
+            "catalog:product_delete",
+        ):
+            with self.subTest(route_name=route_name):
+                response = self.client.get(
+                    reverse(route_name, kwargs={"pk": self.product.pk})
+                )
+                self.assertEqual(response.status_code, 403)
+
+    def test_owner_can_open_update_and_delete(self):
+        for route_name in (
+            "catalog:product_update",
+            "catalog:product_delete",
+        ):
+            with self.subTest(route_name=route_name):
+                response = self.client.get(
+                    reverse(route_name, kwargs={"pk": self.product.pk})
+                )
+                self.assertEqual(response.status_code, 200)
+
+    def test_moderator_can_open_update_and_delete_for_foreign_product(self):
+        self.client.force_login(self.moderator)
+
+        for route_name in (
+            "catalog:product_update",
+            "catalog:product_delete",
+        ):
+            with self.subTest(route_name=route_name):
+                response = self.client.get(
+                    reverse(route_name, kwargs={"pk": self.product.pk})
+                )
+                self.assertEqual(response.status_code, 200)
+
+    def test_product_action_buttons_are_hidden_from_non_owner(self):
+        self.client.force_login(self.other_user)
+        response = self.client.get(
+            reverse(
+                "catalog:product_detail",
+                kwargs={"pk": self.product.pk},
+            )
+        )
+
+        self.assertNotContains(response, "Редактировать")
+        self.assertNotContains(response, "Удалить")
+
+    def test_product_action_buttons_are_visible_to_moderator(self):
+        self.client.force_login(self.moderator)
+        response = self.client.get(
+            reverse(
+                "catalog:product_detail",
+                kwargs={"pk": self.product.pk},
+            )
+        )
+
+        self.assertContains(response, "Редактировать")
+        self.assertContains(response, "Удалить")
+
+    def test_owner_without_permission_cannot_unpublish_product(self):
+        self.product.is_published = True
+        self.product.save(update_fields=("is_published",))
+
+        response = self.client.post(
+            reverse(
+                "catalog:product_unpublish",
+                kwargs={"pk": self.product.pk},
+            )
+        )
+
+        self.assertEqual(response.status_code, 403)
+        self.product.refresh_from_db()
+        self.assertTrue(self.product.is_published)
+
+    def test_moderator_can_unpublish_product(self):
+        self.product.is_published = True
+        self.product.save(update_fields=("is_published",))
+        self.client.force_login(self.moderator)
+
+        response = self.client.post(
+            reverse(
+                "catalog:product_unpublish",
+                kwargs={"pk": self.product.pk},
+            )
+        )
+
+        self.assertRedirects(
+            response,
+            reverse(
+                "catalog:product_detail",
+                kwargs={"pk": self.product.pk},
+            ),
+        )
+        self.product.refresh_from_db()
+        self.assertFalse(self.product.is_published)
+
+
+class GroupSetupCommandTests(TestCase):
+    """Тесты воспроизводимого создания групп домашнего задания."""
+
+    def test_setup_groups_assigns_required_permissions(self):
+        call_command("setup_groups")
+
+        product_group = Group.objects.get(name="Модератор продуктов")
+        product_codenames = set(
+            product_group.permissions.values_list("codename", flat=True)
+        )
+        self.assertTrue(
+            {
+                "can_unpublish_product",
+                "change_product",
+                "delete_product",
+            }.issubset(product_codenames)
+        )
+
+        content_group = Group.objects.get(name="Контент-менеджер")
+        content_codenames = set(
+            content_group.permissions.values_list("codename", flat=True)
+        )
+        self.assertTrue(
+            {"add_blog", "change_blog", "delete_blog"}.issubset(
+                content_codenames
+            )
         )
 
 
@@ -363,6 +519,12 @@ class ProductFormValidationTests(CatalogTestCase):
         ].split()
 
         self.assertIn("form-check-input", classes)
+
+        add_blog_permission = Permission.objects.get(
+            content_type__app_label="blog",
+            codename="add_blog",
+        )
+        self.user.user_permissions.add(add_blog_permission)
 
         response = self.client.get(reverse("blog:blog_create"))
         self.assertContains(response, 'class="form-check mb-3"')
