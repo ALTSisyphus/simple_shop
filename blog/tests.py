@@ -2,6 +2,8 @@ import base64
 import shutil
 import tempfile
 
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Permission
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.urls import reverse
@@ -54,6 +56,17 @@ class BlogViewsTests(TestCase):
         super().tearDownClass()
 
     def setUp(self):
+        self.content_manager = get_user_model().objects.create_user(
+            email="content-manager@example.com",
+            password="StrongPass123!",
+        )
+        permissions = Permission.objects.filter(
+            content_type__app_label="blog",
+            codename__in=("add_blog", "change_blog", "delete_blog"),
+        )
+        self.content_manager.user_permissions.set(permissions)
+        self.client.force_login(self.content_manager)
+
         self.published_blog = Blog.objects.create(
             title="Опубликованная статья",
             content="Содержимое опубликованной статьи.",
@@ -406,3 +419,55 @@ class BlogViewsTests(TestCase):
             response.status_code,
             404,
         )
+
+
+class BlogPermissionsTests(TestCase):
+    """Тесты доступа к изменению блога для дополнительного задания."""
+
+    def setUp(self):
+        self.blog = Blog.objects.create(
+            title="Статья для проверки прав",
+            content="Содержимое статьи.",
+            is_published=True,
+        )
+        self.user = get_user_model().objects.create_user(
+            email="ordinary-blog-user@example.com",
+            password="StrongPass123!",
+        )
+        self.product_moderator = get_user_model().objects.create_user(
+            email="product-moderator@example.com",
+            password="StrongPass123!",
+        )
+        product_permissions = Permission.objects.filter(
+            content_type__app_label="catalog",
+            codename__in=(
+                "can_unpublish_product",
+                "change_product",
+                "delete_product",
+            ),
+        )
+        self.product_moderator.user_permissions.set(product_permissions)
+
+    def test_ordinary_user_cannot_modify_blog(self):
+        self.client.force_login(self.user)
+
+        for route_name, kwargs in (
+            ("blog:blog_create", {}),
+            ("blog:blog_update", {"pk": self.blog.pk}),
+            ("blog:blog_delete", {"pk": self.blog.pk}),
+        ):
+            with self.subTest(route_name=route_name):
+                response = self.client.get(reverse(route_name, kwargs=kwargs))
+                self.assertEqual(response.status_code, 403)
+
+    def test_product_moderator_cannot_modify_blog(self):
+        self.client.force_login(self.product_moderator)
+
+        for route_name, kwargs in (
+            ("blog:blog_create", {}),
+            ("blog:blog_update", {"pk": self.blog.pk}),
+            ("blog:blog_delete", {"pk": self.blog.pk}),
+        ):
+            with self.subTest(route_name=route_name):
+                response = self.client.get(reverse(route_name, kwargs=kwargs))
+                self.assertEqual(response.status_code, 403)
