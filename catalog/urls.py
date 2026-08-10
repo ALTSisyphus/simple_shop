@@ -1,7 +1,11 @@
+from django.conf import settings
 from django.urls import path
+from django.views.decorators.cache import cache_page
+from django.views.decorators.vary import vary_on_cookie
 
 from catalog.apps import CatalogConfig
 from catalog.views import (
+    CategoryProductListView,
     ContactsView,
     ProductCreateView,
     ProductDeleteView,
@@ -12,6 +16,11 @@ from catalog.views import (
 )
 
 app_name = CatalogConfig.name
+
+
+cached_product_detail_view = cache_page(settings.CACHE_TTL)(
+    vary_on_cookie(ProductDetailView.as_view())
+)
 
 urlpatterns = [
     path(
@@ -31,8 +40,13 @@ urlpatterns = [
     ),
     path(
         "products/<int:pk>/",
-        ProductDetailView.as_view(),
+        cached_product_detail_view,
         name="product_detail",
+    ),
+    path(
+        "categories/<int:category_id>/",
+        CategoryProductListView.as_view(),
+        name="category_products",
     ),
     path(
         "products/<int:pk>/edit/",
