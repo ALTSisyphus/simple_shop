@@ -104,6 +104,17 @@ MEDIA_ROOT = BASE_DIR / "media"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+REDIS_URL = os.getenv("REDIS_URL", "redis://127.0.0.1:6379/1")
+CACHE_TTL = int(os.getenv("CACHE_TTL", "900"))
+
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": REDIS_URL,
+        "TIMEOUT": CACHE_TTL,
+    }
+}
+
 
 AUTH_USER_MODEL = "users.User"
 LOGIN_URL = "users:login"
