@@ -1,9 +1,12 @@
 import io
 import shutil
 import tempfile
+from unittest.mock import patch
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
+from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
 from django.test import TestCase, override_settings
@@ -13,6 +16,7 @@ from PIL import Image
 from blog.forms import BlogForm
 from catalog.forms import MAX_IMAGE_SIZE, ProductForm
 from catalog.models import Category, Product
+from catalog.services import get_products_by_category
 
 
 def create_test_image(
@@ -45,6 +49,14 @@ def create_test_image(
     )
 
 
+@override_settings(
+    CACHES={
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+            "LOCATION": "catalog-tests",
+        }
+    }
+)
 class CatalogTestCase(TestCase):
     """Общая настройка тестов каталога."""
 
@@ -609,3 +621,116 @@ class ProductImageValidationTests(CatalogTestCase):
             ),
         )
         self.assertTrue(self.product.image.name.endswith("existing.png"))
+
+
+@override_settings(
+    CACHES={
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+            "LOCATION": "catalog-cache-tests",
+        }
+    },
+    CACHE_TTL=900,
+)
+class ProductCachingTests(CatalogTestCase):
+    """Тесты страничного и низкоуровневого кеширования каталога."""
+
+    def setUp(self):
+        super().setUp()
+        cache.clear()
+
+    def tearDown(self):
+        cache.clear()
+        super().tearDown()
+
+    def test_category_view_displays_only_selected_category_products(self):
+        other_category = Category.objects.create(name="Другая категория")
+        other_product = Product.objects.create(
+            name="Чужой товар",
+            category=other_category,
+            price="200.00",
+        )
+
+        response = self.client.get(
+            reverse(
+                "catalog:category_products",
+                kwargs={"category_id": self.category.pk},
+            )
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(
+            response,
+            "catalog/category_products.html",
+        )
+        self.assertContains(response, self.product.name)
+        self.assertNotContains(response, other_product.name)
+
+    def test_category_service_uses_expected_cache_key_and_ttl(self):
+        with (
+            patch(
+                "catalog.services.cache.get",
+                return_value=None,
+            ) as cache_get,
+            patch("catalog.services.cache.set") as cache_set,
+        ):
+            products = get_products_by_category(self.category.pk)
+
+        cache_key = f"category_{self.category.pk}"
+        cache_get.assert_called_once_with(cache_key)
+        cache_set.assert_called_once_with(
+            cache_key,
+            products,
+            timeout=settings.CACHE_TTL,
+        )
+        self.assertEqual(
+            [product.pk for product in products],
+            [self.product.pk],
+        )
+
+    def test_category_service_returns_cache_without_database_query(self):
+        cached_products = [self.product]
+
+        with (
+            patch(
+                "catalog.services.cache.get",
+                return_value=cached_products,
+            ),
+            patch(
+                "catalog.services.Product.objects.filter"
+            ) as product_filter,
+        ):
+            products = get_products_by_category(self.category.pk)
+
+        self.assertEqual(products, cached_products)
+        product_filter.assert_not_called()
+
+    def test_product_detail_page_is_cached_for_same_user(self):
+        url = reverse(
+            "catalog:product_detail",
+            kwargs={"pk": self.product.pk},
+        )
+
+        # force_login() не проходит через форму входа и не создаёт
+        # CSRF-cookie. Страница зависит от Cookie, поэтому сначала
+        # стабилизируем cookies клиента, затем очищаем прогревочный кеш.
+        self.client.get(url)
+        cache.clear()
+
+        first_response = self.client.get(url)
+        Product.objects.filter(pk=self.product.pk).update(
+            name="Изменённое имя без сброса кеша"
+        )
+        second_response = self.client.get(url)
+
+        self.assertEqual(first_response.status_code, 200)
+        self.assertEqual(second_response.status_code, 200)
+        self.assertContains(second_response, self.product.name)
+        self.assertNotContains(
+            second_response,
+            "Изменённое имя без сброса кеша",
+        )
+        self.assertIn(
+            f"max-age={settings.CACHE_TTL}",
+            first_response.headers["Cache-Control"],
+        )
