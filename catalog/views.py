@@ -16,6 +16,7 @@ from django.views.generic import (
 
 from catalog.forms import ProductForm
 from catalog.models import Category, Contact, Product
+from catalog.services import get_products_by_category
 
 
 class ProductOwnerOrPermissionMixin(UserPassesTestMixin):
@@ -37,6 +38,25 @@ class ProductListView(ListView):
     template_name = "catalog/home.html"
     context_object_name = "products"
     paginate_by = 6
+
+
+class CategoryProductListView(ListView):
+    """Отображает список всех товаров выбранной категории."""
+
+    template_name = "catalog/category_products.html"
+    context_object_name = "products"
+
+    def get_queryset(self):
+        self.category = get_object_or_404(
+            Category,
+            pk=self.kwargs["category_id"],
+        )
+        return get_products_by_category(self.category.pk)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["category"] = self.category
+        return context
 
 
 class ProductDetailView(LoginRequiredMixin, DetailView):
