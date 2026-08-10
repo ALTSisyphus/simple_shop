@@ -1,6 +1,6 @@
 from django.contrib.auth import authenticate, get_user_model
 from django.core import mail
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from catalog.models import Category, Product
@@ -8,6 +8,14 @@ from catalog.models import Category, Product
 User = get_user_model()
 
 
+@override_settings(
+    CACHES={
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+            "LOCATION": "users-tests",
+        }
+    }
+)
 class UsersTests(TestCase):
     def test_user_is_created_and_authenticated_by_email(self):
         user = User.objects.create_user(
