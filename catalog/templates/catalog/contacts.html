@@ -1,0 +1,151 @@
+{% extends "catalog/base.html" %}
+
+{% block title %}
+    Контакты — Skystore
+{% endblock %}
+
+{% block content %}
+<section class="container py-5">
+    <h1 class="display-6 fw-bold text-center mb-5">
+        Контакты
+    </h1>
+
+    {% if success_message %}
+        <div
+            class="alert alert-success"
+            role="alert"
+        >
+            {{ success_message }}
+        </div>
+    {% endif %}
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h2 class="h4 mb-4">
+                        Наши реквизиты
+                    </h2>
+
+                    <table class="table table-striped mb-0">
+                        <tbody>
+                        {% for contact in contacts %}
+                            <tr>
+                                <th
+                                    scope="row"
+                                    class="w-25"
+                                >
+                                    Страна
+                                </th>
+                                <td>
+                                    {{ contact.country }}
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <th scope="row">
+                                    ИНН
+                                </th>
+                                <td>
+                                    {{ contact.tax_id }}
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <th scope="row">
+                                    Адрес
+                                </th>
+                                <td>
+                                    {{ contact.address }}
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="2">
+                                    Контактные данные пока не добавлены.
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h2 class="h4 mb-4">
+                        Свяжитесь с нами
+                    </h2>
+
+                    <form
+                        method="post"
+                        action="{% url 'catalog:contacts' %}"
+                    >
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label
+                                class="form-label"
+                                for="name"
+                            >
+                                Имя
+                            </label>
+
+                            <input
+                                class="form-control"
+                                id="name"
+                                name="name"
+                                type="text"
+                                required
+                            >
+                        </div>
+
+                        <div class="mb-3">
+                            <label
+                                class="form-label"
+                                for="phone"
+                            >
+                                Телефон
+                            </label>
+
+                            <input
+                                class="form-control"
+                                id="phone"
+                                name="phone"
+                                type="text"
+                                required
+                            >
+                        </div>
+
+                        <div class="mb-3">
+                            <label
+                                class="form-label"
+                                for="message"
+                            >
+                                Сообщение
+                            </label>
+
+                            <textarea
+                                class="form-control"
+                                id="message"
+                                name="message"
+                                rows="4"
+                                required
+                            ></textarea>
+                        </div>
+
+                        <button
+                            class="btn btn-outline-primary"
+                            type="submit"
+                        >
+                            Отправить
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,112 @@
+{% extends "catalog/base.html" %}
+{% load static %}
+
+{% block title %}
+    {{ product.name }} — Skystore
+{% endblock %}
+
+{% block content %}
+<section class="container py-5">
+    <div class="card shadow-sm overflow-hidden">
+        <div class="row g-0">
+            <div class="col-lg-6 bg-white">
+                {% if product.image %}
+                    <img
+                        class="product-detail__image"
+                        src="{{ product.image.url }}"
+                        alt="{{ product.name }}"
+                    >
+                {% else %}
+                    <img
+                        class="product-detail__image"
+                        src="{% static 'catalog/images/no-image.svg' %}"
+                        alt="Изображение отсутствует"
+                    >
+                {% endif %}
+            </div>
+
+            <div class="col-lg-6">
+                <div
+                    class="card-body p-4 p-lg-5 h-100 d-flex flex-column"
+                >
+                    <div class="d-flex flex-wrap justify-content-between gap-2 mb-3">
+                        <h1 class="display-6 fw-bold mb-0">
+                            {{ product.name }}
+                        </h1>
+
+                        {% if product.is_published %}
+                            <span class="badge text-bg-success align-self-start">
+                                Опубликован
+                            </span>
+                        {% else %}
+                            <span class="badge text-bg-secondary align-self-start">
+                                Не опубликован
+                            </span>
+                        {% endif %}
+                    </div>
+
+                    {% if product.owner %}
+                        <p class="small text-muted mb-4">
+                            Владелец: {{ product.owner.email }}
+                        </p>
+                    {% endif %}
+
+                    <div class="text-muted product-description flex-grow-1">
+                        {% if product.description %}
+                            {{ product.description|linebreaks }}
+                        {% else %}
+                            <p>Описание отсутствует.</p>
+                        {% endif %}
+                    </div>
+
+                    <p class="fs-3 fw-bold mt-4 mb-4">
+                        {{ product.price }} руб.
+                    </p>
+
+                    <div class="d-flex flex-wrap gap-2">
+                        {% if user == product.owner or perms.catalog.change_product %}
+                            <a
+                                class="btn btn-primary"
+                                href="{% url 'catalog:product_update' product.pk %}"
+                            >
+                                Редактировать
+                            </a>
+                        {% endif %}
+
+                        {% if user == product.owner or perms.catalog.delete_product %}
+                            <a
+                                class="btn btn-outline-danger"
+                                href="{% url 'catalog:product_delete' product.pk %}"
+                            >
+                                Удалить
+                            </a>
+                        {% endif %}
+
+                        {% if product.is_published and perms.catalog.can_unpublish_product %}
+                            <form
+                                method="post"
+                                action="{% url 'catalog:product_unpublish' product.pk %}"
+                            >
+                                {% csrf_token %}
+                                <button
+                                    class="btn btn-outline-warning"
+                                    type="submit"
+                                >
+                                    Снять с публикации
+                                </button>
+                            </form>
+                        {% endif %}
+
+                        <a
+                            class="btn btn-outline-secondary"
+                            href="{% url 'catalog:home' %}"
+                        >
+                            Назад на главную
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
