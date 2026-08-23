@@ -1,26 +1,54 @@
-from django.contrib.auth.views import LogoutView
-from django.urls import path, reverse_lazy
+from django.contrib.auth import views as auth_views
+from django.urls import path
 
-from users.apps import UsersConfig
-from users.views import verify_email, ProfileUpdateView, RegisterView, UserLoginView
+from users.views import (
+    ProfileUpdateView,
+    RegisterView,
+    UserLoginView,
+    verify_email,
+)
 
-app_name = UsersConfig.name
+app_name = "users"
 
 urlpatterns = [
+    path(
+        "register/",
+        RegisterView.as_view(),
+        name="register",
+    ),
+    path(
+        "login/",
+        UserLoginView.as_view(),
+        name="login",
+    ),
+    path(
+        "profile/",
+        ProfileUpdateView.as_view(),
+        name="profile",
+    ),
     path(
         "verify/<str:token>/",
         verify_email,
         name="verify_email",
     ),
-
-    path("register/", RegisterView.as_view(), name="register"),
-    path("login/", UserLoginView.as_view(), name="login"),
     path(
-        "logout/",
-        LogoutView.as_view(next_page=reverse_lazy("catalog:home")),
-        name="logout",
+        "password-reset/",
+        auth_views.PasswordResetView.as_view(),
+        name="password_reset",
     ),
-    path("profile/", ProfileUpdateView.as_view(), name="profile"),
+    path(
+        "password-reset/done/",
+        auth_views.PasswordResetDoneView.as_view(),
+        name="password_reset_done",
+    ),
+    path(
+        "password-reset-confirm/<uidb64>/<token>/",
+        auth_views.PasswordResetConfirmView.as_view(),
+        name="password_reset_confirm",
+    ),
+    path(
+        "password-reset-complete/",
+        auth_views.PasswordResetCompleteView.as_view(),
+        name="password_reset_complete",
+    ),
 ]
-
-# email verification route
