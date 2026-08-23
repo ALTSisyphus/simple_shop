@@ -1,5 +1,6 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.utils.crypto import get_random_string
 
 from users.managers import UserManager
 
@@ -13,6 +14,8 @@ class User(AbstractUser):
 
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default=ROLE_USER)
     email_verified = models.BooleanField(default=False)
+    email_verification_token = models.CharField(max_length=64, blank=True)
+    is_blocked = models.BooleanField(default=False)
 
     username = None
     email = models.EmailField(
