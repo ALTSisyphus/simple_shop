@@ -34,6 +34,7 @@ class Mailing(models.Model):
     message = models.ForeignKey(Message, on_delete=models.CASCADE, related_name="mailings")
     recipients = models.ManyToManyField(Recipient, related_name="mailings")
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="mailings")
+    is_active = models.BooleanField(default=True)
 
     def update_status(self):
         now = timezone.now()
