@@ -16,3 +16,5 @@ urlpatterns = [
     ),
     path("profile/", ProfileUpdateView.as_view(), name="profile"),
 ]
+
+# email verification route
