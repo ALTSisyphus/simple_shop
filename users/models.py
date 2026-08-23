@@ -7,6 +7,13 @@ from users.managers import UserManager
 class User(AbstractUser):
     """Пользователь с авторизацией по электронной почте."""
 
+    ROLE_USER = "user"
+    ROLE_MANAGER = "manager"
+    ROLE_CHOICES = [(ROLE_USER, "Пользователь"), (ROLE_MANAGER, "Менеджер")]
+
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default=ROLE_USER)
+    email_verified = models.BooleanField(default=False)
+
     username = None
     email = models.EmailField(
         unique=True,
