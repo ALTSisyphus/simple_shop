@@ -23,7 +23,9 @@ class ManagerUserListView(ManagerRequiredMixin, ListView):
 
 
 def block_user(request, pk):
-    get_object_or_404(User, pk=pk).update(is_blocked=True)
+    user = get_object_or_404(User, pk=pk)
+    user.is_blocked = True
+    user.save(update_fields=["is_blocked"])
     return redirect("mailing:manager_users")
 
 
