@@ -2,6 +2,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.cache import cache
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect
+from django.views.decorators.cache import cache_page
 from django.views.generic import CreateView, DetailView, ListView
 from django.urls import reverse_lazy
 
@@ -57,11 +58,18 @@ def run_mailing(request, pk):
     return redirect("mailing:detail", pk=pk)
 
 
+@cache_page(60 * 15)
 def statistics(request):
     key = f"mailing_stats_{request.user.pk}"
     result = cache.get(key)
     if result is None:
         mailings = Mailing.objects.filter(owner=request.user)
-        result = {"mailings": mailings.count(), "recipients": Recipient.objects.filter(owner=request.user).count()}
+        result = {
+            "mailings": mailings.count(),
+            "active_mailings": mailings.filter(is_active=True, status=Mailing.STATUS_RUNNING).count(),
+            "recipients": Recipient.objects.filter(owner=request.user).count(),
+            "successful": sum(m.attempts.filter(status="Успешно").count() for m in mailings),
+            "failed": sum(m.attempts.filter(status="Не успешно").count() for m in mailings),
+        }
         cache.set(key, result, 900)
     return JsonResponse(result)
