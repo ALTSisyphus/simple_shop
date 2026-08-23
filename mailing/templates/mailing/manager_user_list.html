@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Пользователи сервиса</h1>
+
+<table>
+    <tr>
+        <th>Email</th>
+        <th>Роль</th>
+        <th>Статус</th>
+    </tr>
+
+{% for user in users %}
+<tr>
+    <td>{{ user.email }}</td>
+    <td>{{ user.role }}</td>
+    <td>
+        {% if user.is_blocked %}
+            Заблокирован
+        {% else %}
+            Активен
+        {% endif %}
+    </td>
+</tr>
+
+{% empty %}
+<tr>
+    <td colspan="3">Пользователей нет</td>
+</tr>
+{% endfor %}
+
+</table>
+{% endblock %}
