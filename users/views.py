@@ -67,6 +67,12 @@ class UserLoginView(LoginView):
     authentication_form = UserLoginForm
     redirect_authenticated_user = True
 
+    def form_valid(self, form):
+        if form.get_user().is_blocked:
+            messages.error(self.request, "Пользователь заблокирован.")
+            return redirect("users:login")
+        return super().form_valid(form)
+
 
 class ProfileUpdateView(LoginRequiredMixin, UpdateView):
     model = User
