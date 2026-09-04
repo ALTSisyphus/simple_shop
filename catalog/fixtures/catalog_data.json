@@ -1,0 +1,65 @@
+[
+  {
+    "model": "catalog.category",
+    "pk": 1,
+    "fields": {
+      "name": "Рассылки",
+      "description": "Сервисы для автоматизации электронных рассылок."
+    }
+  },
+  {
+    "model": "catalog.category",
+    "pk": 2,
+    "fields": {
+      "name": "Телеграм-боты",
+      "description": "Готовые решения для Telegram."
+    }
+  },
+  {
+    "model": "catalog.category",
+    "pk": 3,
+    "fields": {
+      "name": "Веб-приложения",
+      "description": "Приложения и сервисы для веба."
+    }
+  },
+  {
+    "model": "catalog.product",
+    "pk": 1,
+    "fields": {
+      "name": "Сервис рассылок",
+      "description": "Планирование и отправка писем клиентам.",
+      "image": "",
+      "category": 1,
+      "price": "140.00",
+      "created_at": "2026-06-01T09:00:00Z",
+      "updated_at": "2026-06-01T09:00:00Z"
+    }
+  },
+  {
+    "model": "catalog.product",
+    "pk": 2,
+    "fields": {
+      "name": "Бот поддержки",
+      "description": "Отвечает на частые вопросы пользователей.",
+      "image": "",
+      "category": 2,
+      "price": "89.90",
+      "created_at": "2026-06-02T09:00:00Z",
+      "updated_at": "2026-06-02T09:00:00Z"
+    }
+  },
+  {
+    "model": "catalog.product",
+    "pk": 3,
+    "fields": {
+      "name": "Система аналитики",
+      "description": "Панель с основными показателями магазина.",
+      "image": "",
+      "category": 3,
+      "price": "215.50",
+      "created_at": "2026-06-03T09:00:00Z",
+      "updated_at": "2026-06-03T09:00:00Z"
+    }
+  }
+]

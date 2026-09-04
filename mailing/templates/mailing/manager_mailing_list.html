@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Все рассылки</h1>
+
+<table>
+    <tr>
+        <th>Тема</th>
+        <th>Владелец</th>
+        <th>Статус</th>
+    </tr>
+
+{% for mailing in mailings %}
+<tr>
+    <td>{{ mailing.message.subject }}</td>
+    <td>{{ mailing.owner.email }}</td>
+    <td>{{ mailing.status }}</td>
+</tr>
+{% empty %}
+<tr>
+    <td colspan="3">Рассылок нет</td>
+</tr>
+{% endfor %}
+
+</table>
+{% endblock %}
